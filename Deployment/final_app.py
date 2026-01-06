@@ -15,7 +15,7 @@ st.set_page_config(
 # Configure Gemini API
 GEMINI_API_KEY = "AIzaSyBoN6p0BNq21z_a3jH7-a8O7OVuAmXzjz4"
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-pro')
+model = genai.GenerativeModel('gemini-2.5-flash')
 
 # Custom CSS for better styling
 st.markdown("""
@@ -234,7 +234,7 @@ if uploaded_file is not None:
         
         # AI-Generated Personalized Recommendations
         st.markdown("---")
-        st.markdown("## 🤖 AI-Powered Health Recommendations")
+        st.markdown("## 🤖 Silent Beat AI Recommendations")
         
         with st.spinner("🧠 Generating personalized recommendations using AI..."):
             try:
@@ -315,7 +315,7 @@ if uploaded_file is not None:
                     - Stress management is critical - consider counseling
                     - Daily weight and blood pressure monitoring
                     
-                    **Warning Signs - Call 911 Immediately:**
+                    **Warning Signs - Call 108 Immediately:**
                     - Chest pain, pressure, or discomfort
                     - Pain radiating to arm, jaw, neck, or back
                     - Shortness of breath, cold sweats, nausea
@@ -436,7 +436,7 @@ if uploaded_file is not None:
         # Emergency Contact Information
         st.markdown("---")
         st.error("""
-        ### 🚨 EMERGENCY - When to Call 911 Immediately:
+        ### 🚨 EMERGENCY - When to Call 108 Immediately:
         - Chest pain, pressure, squeezing, or fullness
         - Pain spreading to shoulders, neck, arms, jaw, or back
         - Shortness of breath with or without chest discomfort
