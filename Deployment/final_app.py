@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # Configure Gemini API
-GEMINI_API_KEY = "AIzaSyBoN6p0BNq21z_a3jH7-a8O7OVuAmXzjz4"
+GEMINI_API_KEY = "AIzaSyA0nY5_i91Ye1pEQJfcfStsyKQvIgpaoH8"
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-2.5-flash')
 
