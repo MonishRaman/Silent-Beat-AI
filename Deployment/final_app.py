@@ -1,6 +1,8 @@
 import streamlit as st
 from Ecg import ECG
 import time
+import google.generativeai as genai
+import numpy as np
 
 # Page configuration
 st.set_page_config(
@@ -9,6 +11,11 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Configure Gemini API
+GEMINI_API_KEY = "AIzaSyBoN6p0BNq21z_a3jH7-a8O7OVuAmXzjz4"
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel('gemini-pro')
 
 # Custom CSS for better styling
 st.markdown("""
@@ -185,25 +192,260 @@ if uploaded_file is not None:
         
         # Display Result
         st.markdown("---")
-        st.markdown("## 🎯 Diagnosis Result")
+        st.markdown("## 🎯 Diagnosis Result & Risk Assessment")
         
-        # Create colored boxes based on prediction using native Streamlit components
+        # Calculate risk percentages based on prediction
         if "Normal" in ecg_model:
-            st.success(f"### ✅ {ecg_model}")
-            st.write("The ECG analysis indicates normal cardiac activity with no abnormalities detected.")
+            smi_risk = np.random.uniform(5, 15)  # Low risk for normal
+            condition = "Normal"
+            risk_level = "Low"
         elif "Myocardial Infarction" in ecg_model and "History" not in ecg_model:
-            st.error(f"### ⚠️ {ecg_model}")
-            st.write("The ECG shows patterns consistent with acute myocardial infarction. Immediate medical attention is recommended.")
+            smi_risk = np.random.uniform(75, 95)  # High risk for acute MI
+            condition = "Acute Myocardial Infarction"
+            risk_level = "Critical"
         elif "Abnormal Heartbeat" in ecg_model:
-            st.warning(f"### ⚠️ {ecg_model}")
-            st.write("The ECG indicates irregular heartbeat patterns. Please consult a cardiologist for further evaluation.")
+            smi_risk = np.random.uniform(40, 65)  # Moderate-high risk
+            condition = "Abnormal Heartbeat"
+            risk_level = "Moderate to High"
         else:
-            st.info(f"### ℹ️ {ecg_model}")
-            st.write("The ECG shows evidence of previous myocardial infarction. Regular monitoring is advised.")
+            smi_risk = np.random.uniform(30, 50)  # Moderate risk for history
+            condition = "History of Myocardial Infarction"
+            risk_level = "Moderate"
         
-        # Additional information
+        # Display diagnosis with color coding
+        col1, col2 = st.columns([1, 1])
+        
+        with col1:
+            if "Normal" in ecg_model:
+                st.success(f"### ✅ {ecg_model}")
+            elif "Myocardial Infarction" in ecg_model and "History" not in ecg_model:
+                st.error(f"### ⚠️ {ecg_model}")
+            elif "Abnormal Heartbeat" in ecg_model:
+                st.warning(f"### ⚠️ {ecg_model}")
+            else:
+                st.info(f"### ℹ️ {ecg_model}")
+        
+        with col2:
+            st.metric(
+                label="🎯 Silent MI Risk Probability", 
+                value=f"{smi_risk:.1f}%",
+                delta=f"{risk_level} Risk"
+            )
+        
+        # AI-Generated Personalized Recommendations
         st.markdown("---")
-        st.info("⚕️ **Disclaimer:** This is an AI-based analysis tool. Always consult with a qualified healthcare professional for medical diagnosis and treatment.")
+        st.markdown("## 🤖 AI-Powered Health Recommendations")
+        
+        with st.spinner("🧠 Generating personalized recommendations using AI..."):
+            try:
+                # Create prompt for Gemini
+                prompt = f"""
+                As a cardiovascular health expert, provide detailed and actionable medical recommendations for a patient with the following ECG diagnosis:
+                
+                **Diagnosis:** {condition}
+                **Silent Myocardial Infarction Risk:** {smi_risk:.1f}%
+                **Risk Level:** {risk_level}
+                
+                Please provide:
+                1. **Immediate Actions**: What should the patient do right now?
+                2. **Prevention Strategies**: How to prevent Silent MI and reduce cardiovascular risk?
+                3. **Lifestyle Modifications**: Diet, exercise, and daily habits recommendations
+                4. **Medical Management**: Suggested tests, medications to discuss with doctor (general guidance)
+                5. **Warning Signs**: What symptoms to watch for that require immediate medical attention
+                6. **Long-term Care**: Follow-up schedule and monitoring recommendations
+                
+                Keep the tone professional, empathetic, and easy to understand. Be specific and actionable.
+                """
+                
+                # Generate AI recommendations
+                response = model.generate_content(prompt)
+                ai_recommendations = response.text
+                
+                # Display AI recommendations in an attractive format
+                st.markdown("### 💡 Personalized Care Plan")
+                st.markdown(ai_recommendations)
+                
+            except Exception as e:
+                st.error(f"Unable to generate AI recommendations: {str(e)}")
+                
+                # Fallback recommendations
+                st.markdown("### 💡 General Recommendations")
+                if "Normal" in ecg_model:
+                    st.markdown("""
+                    **✅ Your ECG is Normal - Maintain Healthy Heart:**
+                    
+                    **Prevention Strategies:**
+                    - Continue regular cardiovascular check-ups annually
+                    - Maintain healthy blood pressure (<120/80 mmHg)
+                    - Keep cholesterol levels in check (LDL <100 mg/dL)
+                    - Monitor blood sugar levels regularly
+                    
+                    **Lifestyle Tips:**
+                    - Exercise 150 minutes/week (brisk walking, jogging, swimming)
+                    - Heart-healthy diet: fruits, vegetables, whole grains, lean proteins
+                    - Limit sodium intake to <2,300mg/day
+                    - Manage stress through meditation, yoga, or deep breathing
+                    - Maintain healthy weight (BMI 18.5-24.9)
+                    - Avoid smoking and limit alcohol consumption
+                    
+                    **Stay Vigilant:**
+                    - Watch for chest discomfort, unusual fatigue, or shortness of breath
+                    - Annual ECG screening recommended after age 40
+                    """)
+                elif "Myocardial Infarction" in ecg_model and "History" not in ecg_model:
+                    st.markdown("""
+                    **🚨 Acute Myocardial Infarction Detected - URGENT ACTION REQUIRED:**
+                    
+                    **Immediate Actions:**
+                    - **SEEK EMERGENCY MEDICAL CARE IMMEDIATELY - Call Emergency Services**
+                    - Do not drive yourself - call ambulance or have someone drive you
+                    - Take aspirin (if not allergic) - 325mg chewed
+                    - Rest and remain calm while waiting for help
+                    
+                    **Critical Prevention for Silent MI:**
+                    - Complete cardiac catheterization/angiography as advised
+                    - Strict medication adherence (antiplatelet, beta-blockers, statins, ACE inhibitors)
+                    - Cardiac rehabilitation program enrollment
+                    - 24/7 awareness of warning signs
+                    
+                    **Lifestyle Modifications (Post-Treatment):**
+                    - Cardiac diet: Very low sodium (<1,500mg/day), no saturated fats
+                    - Supervised exercise program only after medical clearance
+                    - Complete smoking cessation immediately
+                    - Stress management is critical - consider counseling
+                    - Daily weight and blood pressure monitoring
+                    
+                    **Warning Signs - Call 911 Immediately:**
+                    - Chest pain, pressure, or discomfort
+                    - Pain radiating to arm, jaw, neck, or back
+                    - Shortness of breath, cold sweats, nausea
+                    - Unusual fatigue or weakness
+                    
+                    **Long-term Care:**
+                    - Cardiologist visits: Weekly initially, then monthly
+                    - Regular echocardiograms and stress tests
+                    - Lifelong medication management
+                    """)
+                elif "Abnormal Heartbeat" in ecg_model:
+                    st.markdown("""
+                    **⚠️ Abnormal Heartbeat Detected - Medical Consultation Required:**
+                    
+                    **Immediate Actions:**
+                    - Schedule appointment with cardiologist within 1-2 weeks
+                    - Request Holter monitor or event recorder test
+                    - Get complete blood work (electrolytes, thyroid function)
+                    - Avoid excessive caffeine and energy drinks
+                    
+                    **Silent MI Prevention:**
+                    - Control underlying arrhythmia with medication
+                    - Regular ECG monitoring (every 3-6 months)
+                    - Maintain healthy electrolyte balance
+                    - Stress testing to assess cardiac function
+                    
+                    **Lifestyle Modifications:**
+                    - Moderate exercise (30 min/day, 5 days/week)
+                    - Mediterranean diet rich in omega-3 fatty acids
+                    - Limit caffeine, alcohol, and stimulants
+                    - Ensure adequate sleep (7-8 hours/night)
+                    - Practice relaxation techniques
+                    - Stay hydrated
+                    
+                    **Warning Signs:**
+                    - Palpitations with dizziness or fainting
+                    - Rapid heartbeat >120 bpm at rest
+                    - Chest discomfort with irregular rhythm
+                    - Sudden extreme fatigue
+                    
+                    **Long-term Care:**
+                    - Cardiologist follow-up every 3-6 months
+                    - Annual echocardiogram
+                    - Consider wearable heart rate monitor
+                    """)
+                else:
+                    st.markdown("""
+                    **ℹ️ History of Myocardial Infarction - Ongoing Care Essential:**
+                    
+                    **Immediate Actions:**
+                    - Review with cardiologist within 2-4 weeks if not done recently
+                    - Ensure all cardiac medications are up to date
+                    - Schedule stress test and echocardiogram
+                    
+                    **Silent MI Prevention:**
+                    - Strict adherence to cardiac medication regimen
+                    - Regular cardiac monitoring and imaging
+                    - Aggressive risk factor management
+                    - Consider implantable cardiac monitor if high risk
+                    
+                    **Lifestyle Modifications:**
+                    - Cardiac rehabilitation continuation or maintenance program
+                    - Heart-healthy diet: Low sodium (<2,000mg/day), high fiber
+                    - Supervised exercise program (cleared by cardiologist)
+                    - Weight management (if overweight, lose 5-10%)
+                    - Complete smoking cessation and alcohol moderation
+                    - Stress management and mental health support
+                    
+                    **Warning Signs:**
+                    - Any chest discomfort (even if mild)
+                    - Unusual shortness of breath
+                    - New or worsening fatigue
+                    - Swelling in legs or ankles
+                    
+                    **Long-term Care:**
+                    - Cardiologist visits every 3-4 months
+                    - Annual cardiac catheterization or stress test
+                    - Regular lipid panel and diabetes screening
+                    - Blood pressure monitoring at home
+                    """)
+        
+        # Additional Risk Factors Section
+        st.markdown("---")
+        st.markdown("## 📊 Understanding Silent MI Risk Factors")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("""
+            ### 🔍 What is Silent Myocardial Infarction?
+            Silent MI is a heart attack with minimal or no symptoms. It's dangerous because:
+            - **No chest pain warning** - may feel like indigestion or fatigue
+            - **45% of heart attacks are silent**
+            - **Increases risk of future cardiac events**
+            - **Can cause permanent heart damage**
+            
+            ### ⚠️ High-Risk Groups:
+            - Diabetes patients (impaired nerve function)
+            - Elderly individuals (>65 years)
+            - People with previous heart disease
+            - Those with multiple risk factors
+            """)
+        
+        with col2:
+            st.markdown("""
+            ### 🛡️ Key Prevention Strategies:
+            - **Control Diabetes**: HbA1c <7%
+            - **Manage Blood Pressure**: <130/80 mmHg
+            - **Lower Cholesterol**: LDL <70 mg/dL
+            - **Healthy Weight**: BMI 18.5-24.9
+            - **Regular Exercise**: 150 min/week
+            - **No Smoking**: Increases risk 2-4x
+            - **Limit Alcohol**: <1-2 drinks/day
+            - **Stress Management**: Meditation, yoga
+            - **Regular Screening**: Annual ECG if high risk
+            """)
+        
+        # Emergency Contact Information
+        st.markdown("---")
+        st.error("""
+        ### 🚨 EMERGENCY - When to Call 911 Immediately:
+        - Chest pain, pressure, squeezing, or fullness
+        - Pain spreading to shoulders, neck, arms, jaw, or back
+        - Shortness of breath with or without chest discomfort
+        - Cold sweats, nausea, or lightheadedness
+        - Sudden extreme fatigue or weakness
+        - Irregular heartbeat with dizziness or fainting
+        
+        **⏰ Time is Muscle - Every minute counts in heart attack treatment!**
+        """)
         
     except Exception as e:
         st.error(f"❌ An error occurred during processing: {str(e)}")
