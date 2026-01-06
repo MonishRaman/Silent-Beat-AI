@@ -54,3 +54,6 @@ The tricky path here is feature extraction from images; if done correctly and op
 ![](https://raw.githubusercontent.com/rameshavinash94/Cardiovascular-Detection-using-ECG-images/main/img/demo.gif)
 
 
+cd "D:\projects clone\Cardiovascular-Detection-using-ECG-images\Deployment"; pip install -r requirements.txt
+
+cd "D:\projects clone\Cardiovascular-Detection-using-ECG-images\Deployment"; streamlit run final_app.py
